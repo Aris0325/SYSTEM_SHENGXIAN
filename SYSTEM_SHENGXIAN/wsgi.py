@@ -1,5 +1,5 @@
 """
-WSGI config for SYSTEM_SHENGXIAN project.
+WSGI config for SYSTEM_SHENGXIAN buy.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

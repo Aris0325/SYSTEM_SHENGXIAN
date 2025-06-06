@@ -1,5 +1,5 @@
 """
-ASGI config for SYSTEM_SHENGXIAN project.
+ASGI config for SYSTEM_SHENGXIAN buy.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
