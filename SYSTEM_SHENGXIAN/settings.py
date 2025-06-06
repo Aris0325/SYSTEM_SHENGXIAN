@@ -38,6 +38,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'APPS',
+    'APPS.buy',
+    'APPS.user',
+    'APPS.stock',
+    'APPS.aftermarket',
+    'APPS.deliver',
+    'APPS.finance',
+    'APPS.sale',
+    'APPS.Traceability'
 
 ]
 
@@ -78,7 +86,7 @@ WSGI_APPLICATION = "SYSTEM_SHENGXIAN.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'SHENGXIAN',
+        'NAME': 'shengxian',
         'USER': 'root',
         'PASSWORD':'q1s2j3v5', # 密码
         'HOST' : '127.0.0.1',
