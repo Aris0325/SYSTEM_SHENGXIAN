@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流详情 - {{ task.delivery_id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <!-- 配置Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#0FC6C2',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        info: '#86909C',
+                        light: '#F2F3F5',
+                        dark: '#1D2129'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .card-shadow {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+            .btn-hover {
+                transition: all 0.3s ease;
+            }
+            .btn-hover:hover {
+                transform: translateY(-2px);
+            }
+            .status-badge {
+                @apply px-2 py-1 rounded-full text-xs font-medium;
+            }
+            .status-completed {
+                @apply bg-success/10 text-success;
+            }
+            .status-in-transit {
+                @apply bg-warning/10 text-warning;
+            }
+            .status-pending {
+                @apply bg-info/10 text-info;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter text-dark">
+    <div class="min-h-screen flex flex-col">
+        <!-- 导航栏 -->
+        <nav class="bg-white shadow-sm sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <a href="{% url 'deliver:delivery-search' %}" class="text-primary font-bold text-xl">物流查询系统</a>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <a href="#" class="text-gray-600 hover:text-primary transition-colors">
+                            <i class="fa fa-question-circle mr-1"></i>帮助
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要内容 -->
+        <main class="flex-grow">
+            <div class="max-w-6xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+                <!-- 返回按钮 -->
+                <div class="mb-6">
+                    <a href="{% url 'deliver:delivery-search' %}" class="inline-flex items-center text-primary hover:text-primary/80 transition-colors">
+                        <i class="fa fa-arrow-left mr-2"></i>返回查询
+                    </a>
+                </div>
+
+                <!-- 任务信息卡片 -->
+                <div class="bg-white rounded-xl card-shadow mb-8 overflow-hidden">
+                    <div class="bg-primary/5 border-l-4 border-primary p-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between">
+                            <div>
+                                <h1 class="text-[clamp(1.25rem,2vw,1.75rem)] font-bold text-dark mb-2">配送任务详情</h1>
+                                <div class="flex items-center text-lg">
+                                    <span class="font-semibold mr-2">#{{ task.delivery_id }}</span>
+                                    {% if task.status == '已完成' %}
+                                        <span class="status-badge status-completed">
+                                            <i class="fa fa-check-circle mr-1"></i>{{ task.status }}
+                                        </span>
+                                    {% elif task.status == '运输中' %}
+                                        <span class="status-badge status-in-transit">
+                                            <i class="fa fa-truck mr-1"></i>{{ task.status }}
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge status-pending">
+                                            <i class="fa fa-clock-o mr-1"></i>{{ task.status }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mt-4 md:mt-0 flex items-center">
+                                <div class="text-center mr-6">
+                                    <div class="text-sm text-gray-500">接单时间</div>
+                                    <div class="font-semibold">{{ task.departure_time|date:"Y-m-d H:i" }}</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-sm text-gray-500">预计送达</div>
+                                    <div class="font-semibold">
+                                        {% if task.arrival_time %}
+                                            {{ task.arrival_time|date:"Y-m-d H:i" }}
+                                        {% else %}
+                                            <span class="text-gray-400">待确定</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+                        <div>
+                            <h3 class="font-semibold text-lg mb-3 flex items-center">
+                                <i class="fa fa-info-circle text-primary mr-2"></i>基本信息
+                            </h3>
+                            <div class="space-y-3">
+                                <div class="flex">
+                                    <div class="w-1/3 text-gray-500">订单ID:</div>
+                                    <div class="w-2/3 font-medium">{{ task.order_id }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-1/3 text-gray-500">司机ID:</div>
+                                    <div class="w-2/3 font-medium">{{ task.driver_id }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-1/3 text-gray-500">出发时间:</div>
+                                    <div class="w-2/3 font-medium">{{ task.departure_time|date:"Y-m-d H:i:s" }}</div>
+                                </div>
+                                <div class="flex">
+                                    <div class="w-1/3 text-gray-500">到达时间:</div>
+                                    <div class="w-2/3 font-medium">
+                                        {% if task.arrival_time %}
+                                            {{ task.arrival_time|date:"Y-m-d H:i:s" }}
+                                        {% else %}
+                                            <span class="text-gray-400">未送达</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if temperature_logs %}
+                        <div>
+                            <h3 class="font-semibold text-lg mb-3 flex items-center">
+                                <i class="fa fa-thermometer-half text-primary mr-2"></i>温度统计
+                            </h3>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                                    <div class="text-blue-600 text-sm mb-1">最低温度</div>
+                                    <div class="text-xl font-bold">{{ temp_stats.min_temp|floatformat:1 }}°C</div>
+                                </div>
+                                <div class="bg-green-50 rounded-lg p-4 text-center">
+                                    <div class="text-green-600 text-sm mb-1">平均温度</div>
+                                    <div class="text-xl font-bold">{{ temp_stats.avg_temp|floatformat:1 }}°C</div>
+                                </div>
+                                <div class="bg-red-50 rounded-lg p-4 text-center">
+                                    <div class="text-red-600 text-sm mb-1">最高温度</div>
+                                    <div class="text-xl font-bold">{{ temp_stats.max_temp|floatformat:1 }}°C</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 温度记录图表 -->
+                {% if temperature_logs %}
+                <div class="bg-white rounded-xl card-shadow mb-8 p-6">
+                    <h3 class="font-semibold text-lg mb-4 flex items-center">
+                        <i class="fa fa-line-chart text-primary mr-2"></i>温度变化记录
+                    </h3>
+                    <div class="h-64">
+                        <canvas id="temperatureChart"></canvas>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 配送物品表格 -->
+                <div class="bg-white rounded-xl card-shadow mb-8 overflow-hidden">
+                    <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                        <h3 class="font-semibold text-lg flex items-center">
+                            <i class="fa fa-boxes text-primary mr-2"></i>配送物品
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">物品ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">产品ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">批次ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">数量</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for item in items %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.item_id }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.product_id }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.batch_id }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.quantity }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if not items %}
+                    <div class="px-6 py-4 text-center text-gray-500">
+                        <i class="fa fa-info-circle mr-1"></i>暂无配送物品信息
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 温度记录表 -->
+                {% if temperature_logs %}
+                <div class="bg-white rounded-xl card-shadow mb-8 overflow-hidden">
+                    <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                        <h3 class="font-semibold text-lg flex items-center">
+                            <i class="fa fa-thermometer-half text-primary mr-2"></i>温度记录 (最近10条)
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">记录时间</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">温度 (°C)</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">GPS位置</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for log in temperature_logs %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ log.time|date:"Y-m-d H:i:s" }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm {% if log.temperature < 0 %}text-blue-600{% elif log.temperature > 30 %}text-red-600{% else %}text-gray-900{% endif %}">
+                                        {{ log.temperature|floatformat:1 }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ log.gps_location }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 调度信息表 -->
+                <div class="bg-white rounded-xl card-shadow overflow-hidden">
+                    <div class="bg-gray-50 border-b border-gray-200 px-6 py-4">
+                        <h3 class="font-semibold text-lg flex items-center">
+                            <i class="fa fa-calendar-check-o text-primary mr-2"></i>调度信息
+                        </h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">调度ID</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分配人</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分配时间</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for order in dispatch_orders %}
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ order.dispatch_id }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.assigned_by }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.assigned_time|date:"Y-m-d H:i:s" }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        {% if order.status == '已完成' %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                {{ order.status }}
+                                            </span>
+                                        {% elif order.status == '进行中' %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                {{ order.status }}
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                {{ order.status }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if not dispatch_orders %}
+                    <div class="px-6 py-4 text-center text-gray-500">
+                        <i class="fa fa-info-circle mr-1"></i>暂无调度信息
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="bg-white border-t border-gray-200 py-6">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div class="text-gray-500 text-sm mb-4 md:mb-0">
+                        © 2025 信息系统大作业 - 版权所有
+                    </div>
+                    <div class="flex space-x-6">
+                        <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa fa-phone mr-1"></i>客服热线
+                        </a>
+                        <a href="#" class="text-gray-500 hover:text-primary transition-colors">
+                            <i class="fa fa-envelope mr-1"></i>联系我们
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const body = document.body;
+            body.classList.add('opacity-0');
+            setTimeout(() => {
+                body.classList.add('transition-opacity', 'duration-500');
+                body.classList.remove('opacity-0');
+            }, 100);
+        });
+    </script>
+</body>
+</html>
